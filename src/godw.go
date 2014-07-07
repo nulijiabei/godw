@@ -14,6 +14,7 @@ import (
 
 // 主结构
 type D struct {
+	// 文件列表
 	files map[string]string
 }
 
@@ -33,14 +34,18 @@ func main() {
 
 // 创建对象
 func NewD() *D {
+	// 创建对象
 	d := new(D)
+	// 读取文件列表
+	//
+	// 返回
 	return d
 }
 
 // Web API 接口现场
 func (d *D) Web() {
 	// 建立监听
-	if e := http.ListenAndServe(":8686", d); e != nil {
+	if e := http.ListenAndServe(":8080", d); e != nil {
 		panic(e)
 	}
 }
@@ -62,6 +67,23 @@ func (d *D) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // 上传文件接口
 func UL(w http.ResponseWriter, r *http.Request) {
+	// 解析参数
+	r.ParseForm()
+	// 获取文件名称
+	//fname := z.Trim(r.FormValue("f"))
+	// 加锁,写入
+	if "POST" == r.Method {
+		file, _, err := r.FormFile("file")
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		defer file.Close()
+		f, err := os.Create("abc")
+		defer f.Close()
+		io.Copy(f, file)
+		return
+	}
 }
 
 // 下载文件接口
@@ -69,7 +91,7 @@ func DW(w http.ResponseWriter, r *http.Request) {
 	// 解析参数
 	r.ParseForm()
 	// 获取文件名称
-	fname := z.Trim(r.FormValue("file"))
+	fname := z.Trim(r.FormValue("f"))
 	// 判断安装包是否存在
 	if !z.Exists(fmt.Sprintf("files/%s", fname)) {
 		w.WriteHeader(404)
@@ -79,7 +101,7 @@ func DW(w http.ResponseWriter, r *http.Request) {
 	z.FileRF(fmt.Sprintf("files/%s", fname), func(f *os.File) {
 		_, err := io.Copy(w, bufio.NewReader(f))
 		if err != nil {
-			log.Println(err)
+			http.Error(w, err.Error(), 500)
 			return
 		}
 	})
@@ -87,9 +109,12 @@ func DW(w http.ResponseWriter, r *http.Request) {
 
 // 主页，提供上传，搜索，列表
 func Index(w http.ResponseWriter, r *http.Request) {
+	// 解析主页面
 	t, err := template.ParseFiles("template/html/index.html")
 	if err != nil {
-		log.Println(err)
+		// 输出错误信息
+		http.Error(w, err.Error(), 500)
 	}
+	// 执行
 	t.Execute(w, nil)
 }
