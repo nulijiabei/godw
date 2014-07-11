@@ -21,7 +21,7 @@ func main() {
 	// 设置日志的结构
 	log.SetFlags(log.Lshortfile | log.Ltime | log.Lmicroseconds)
 
-	log.Println(http.FileServer(http.Dir("template")))
+	// -------------------------------------------------------- //
 
 	http.Handle("/css/", http.FileServer(http.Dir("template")))
 
@@ -31,13 +31,19 @@ func main() {
 
 	http.Handle("/images/", http.FileServer(http.Dir("template")))
 
-	http.Handle("/user2/", http.FileServer(http.Dir("template")))
+	// -------------------------------------------------------- //
 
 	http.HandleFunc("/", index)
 
-	http.HandleFunc("/upload", upload)
+	http.HandleFunc("/addfile.go", addfile)
 
-	http.HandleFunc("/download", download)
+	http.HandleFunc("/filelist.go", filelist)
+
+	http.HandleFunc("/upload.go", upload)
+
+	http.HandleFunc("/download.go", download)
+
+	// -------------------------------------------------------- //
 
 	http.ListenAndServe(":8080", nil)
 
@@ -89,6 +95,28 @@ func download(w http.ResponseWriter, r *http.Request) {
 func index(w http.ResponseWriter, r *http.Request) {
 	// 解析主页面
 	t, err := template.ParseFiles("template/index.html")
+	if err != nil {
+		// 输出错误信息
+		http.Error(w, err.Error(), 500)
+	}
+	// 执行
+	t.Execute(w, nil)
+}
+
+func addfile(w http.ResponseWriter, r *http.Request) {
+	// 解析主页面
+	t, err := template.ParseFiles("template/files/addfile.html")
+	if err != nil {
+		// 输出错误信息
+		http.Error(w, err.Error(), 500)
+	}
+	// 执行
+	t.Execute(w, nil)
+}
+
+func filelist(w http.ResponseWriter, r *http.Request) {
+	// 解析主页面
+	t, err := template.ParseFiles("template/files/filelist.html")
 	if err != nil {
 		// 输出错误信息
 		http.Error(w, err.Error(), 500)
