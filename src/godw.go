@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // 主
@@ -246,7 +247,8 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 			// 记录文件
 			d.Files = append(d.Files, &I{f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
 		} else {
-			if f.Name() == fname {
+			// 检查包含
+			if strings.Contains(strings.ToLower(f.Name()), strings.ToLower(fname)) {
 				// 记录文件
 				d.Files = append(d.Files, &I{f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
 			}
