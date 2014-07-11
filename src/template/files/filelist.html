@@ -100,8 +100,8 @@ html { overflow-x: auto; overflow-y: auto; border:0;}
 						<td>{{.Name}}</td>
 						<td>{{.Size}}</td>
 						<td>{{.Date}}</td>
-						<td><a href="../delfile.nutz?id=${obj.id}">下载</a></td>
-						<td><a href="../delfile.nutz?id=${obj.id}">删除</a></td>
+						<td><a href="../download.go?f={{.Name}}">下载</a></td>
+						<td><a href="../rmfile.go?f={{.Name}}">删除</a></td>
 					</tr>
                    {{end}} 
 				  </table>

@@ -89,9 +89,13 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		return
-
 	}
+
+	// 重定向
+	http.Redirect(w, r, "/filelist.go", http.StatusFound)
+
+	// 返回
+	return
 
 }
 
@@ -149,7 +153,10 @@ func addfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 执行
-	t.Execute(w, nil)
+	t.Execute(w, t)
+
+	// 返回
+	return
 
 }
 
@@ -168,12 +175,15 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 		z.Fremove(fmt.Sprintf("files/%s", fname))
 	}
 
+	// 重定向
+	http.Redirect(w, r, "/filelist.go", http.StatusFound)
+
+	// 返回
 	return
 
 }
 
 /*
-	TODO
 	这里偷个懒
 	应该将文件信息记录到数据库或者文件中
 	我这个每次都去扫描，浪费资源
@@ -243,5 +253,8 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 
 	// 执行
 	t.Execute(w, d)
+
+	// 返回
+	return
 
 }
