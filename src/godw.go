@@ -45,7 +45,9 @@ func main() {
 
 	// -------------------------------------------------------- //
 
+	// 建立监听
 	if err := http.ListenAndServe(":8080", nil); err != nil {
+		// 踢出错误
 		log.Panic(err)
 	}
 
@@ -53,23 +55,41 @@ func main() {
 
 // 上传文件接口
 func upload(w http.ResponseWriter, r *http.Request) {
-	// 解析参数
-	r.ParseForm()
-	// 获取文件名称
-	//fname := z.Trim(r.FormValue("f"))
+
 	// 加锁,写入
 	if "POST" == r.Method {
-		file, _, err := r.FormFile("file")
+
+		file, multi, err := r.FormFile("file")
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
 		}
 		defer file.Close()
-		f, err := os.Create("files/abc")
+
+		// 判断文件是否存在
+		if z.Exists(fmt.Sprintf("files/%s", multi.Filename)) {
+			// 返回错误信息
+			http.Error(w, fmt.Sprintf("WARN: [%s] file exists ...", multi.Filename), 500)
+			return
+		}
+
+		f, err := os.Create(fmt.Sprintf("files/%s", multi.Filename))
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
 		defer f.Close()
-		io.Copy(f, file)
+
+		_, err = io.Copy(f, file)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
 		return
+
 	}
+
 }
 
 // 下载文件接口
@@ -80,7 +100,7 @@ func download(w http.ResponseWriter, r *http.Request) {
 	fname := z.Trim(r.FormValue("f"))
 	// 判断安装包是否存在
 	if !z.Exists(fmt.Sprintf("files/%s", fname)) {
-		http.Error(w, "not found", 500)
+		http.Error(w, fmt.Sprintf("WARN: [%s] file not exists ...", fname), 500)
 		return
 	}
 	// 写入文件流
@@ -93,13 +113,14 @@ func download(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// 主页，提供上传，搜索，列表
+// 主页
 func index(w http.ResponseWriter, r *http.Request) {
 	// 解析主页面
 	t, err := template.ParseFiles("template/index.html")
 	if err != nil {
 		// 输出错误信息
 		http.Error(w, err.Error(), 500)
+		return
 	}
 	// 执行
 	t.Execute(w, nil)
@@ -111,9 +132,14 @@ func addfile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 输出错误信息
 		http.Error(w, err.Error(), 500)
+		return
 	}
 	// 执行
 	t.Execute(w, nil)
+}
+
+func rmfile(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func filelist(w http.ResponseWriter, r *http.Request) {
@@ -122,6 +148,7 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 输出错误信息
 		http.Error(w, err.Error(), 500)
+		return
 	}
 	// 执行
 	t.Execute(w, nil)
