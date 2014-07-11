@@ -102,6 +102,8 @@ func upload(w http.ResponseWriter, r *http.Request) {
 // 下载文件接口
 func download(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set("Content-Type", "multipart/form-data")
+
 	// 解析参数
 	r.ParseForm()
 
@@ -123,6 +125,9 @@ func download(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
+	// 返回
+	return
+
 }
 
 // 主页
@@ -138,6 +143,9 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 	// 执行
 	t.Execute(w, nil)
+
+	// 返回
+	return
 
 }
 
