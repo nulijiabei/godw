@@ -46,31 +46,34 @@ html { overflow-x: auto; overflow-y: auto; border:0;}
 </script>
 <link href="../css/style.css" rel="stylesheet" type="text/css" />
 </head>
-<script type="text/javascript">
-
-function link(){
-    document.getElementById("fom").action="addrenwu.htm";
-   document.getElementById("fom").submit();
-}
-
-</SCRIPT>
 
 <body>
 <form name="fom" id="fom" method="post" action="">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
-  
+
   <tr>
-    <td height="30">      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <td height="30">      
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
           <td height="62" background="../images/nav04.gif">
-            
-		   <table width="98%" border="0" align="center" cellpadding="0" cellspacing="0">
+		
+		  <table width="98%" border="0" align="center" cellpadding="0" cellspacing="0">
 		    <tr>
-			  <td width="21"><img src="../images/ico04.gif" width="20" height="18" /></td>
-			  <td>文件信息</td>	
+			  <td width="24"><img src="/images/ico07.gif" width="20" height="18" /></td>
+			  <td>
+			  	<form action="../scanfile.go" method="post"> 
+			  <label>
+			  <span>文件名: </span><input name="f" type="text"/>
+			  </label>
+			    <input name="Submit2" type="submit" class="right-button01" value="搜索"/>
+			    </form>
+			   </td>
+			
 		    </tr>
-          </table></td>
-        </tr>
+          </table>    
+	</td>
+    </tr>
+	
     </table></td></tr>
   <tr>
     <td><table id="subtree1" style="DISPLAY: " width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -84,25 +87,23 @@ function link(){
 				<table width="100%" border="0" cellpadding="4" cellspacing="1" bgcolor="#464646" class="newfont03">
 				 <tr class="CTitle" >
                     	<td height="22" colspan="7" align="center" style="font-size:16px" class="colorf">文件信息查看</td>
-                  </tr>
+                  </tr>  
                   <tr bgcolor="#EEEEEE">
-                    <td align="center" width="20%">文件名称</td>
-                    <td align="center" width="25%">存储路径</td>
-                    <td align="center" width="25%">目标路径</td>
-                    <td align="center" width="5%">项目</td>
-                    <td align="center" width="20%">操作时间</td>
-                    <td align="center" width="5%">操作</td>
+                    <td align="center" width="30%">文件名称</td>
+                    <td align="center" width="20%">文件大小</td>
+                    <td align="center" width="30%">创建日期</td>
+                    <td align="center" width="10%">下载</td>
+                    <td align="center" width="10%">操作</td>
                   </tr>
-	               	<c:forEach var="obj" items="${obj.list}">
-		               	<tr bgcolor="#FFFFFF">  
-							<td>${obj.name}</td>
-							<td><a href="../fileinfo.nutz?id=${obj.id}">${obj.download}</a></td>
-							<td>${obj.path}</td>
-							<td>${obj.pid}</td>
-							<td>${obj.time}</td>
-							<td><a href="../delfile.nutz?id=${obj.id}">删除</a></td>
-						</tr>
-					</c:forEach>
+				   {{range .Files}} 
+					<tr bgcolor="#FFFFFF">  
+						<td>{{.Name}}</td>
+						<td>{{.Size}}</td>
+						<td>{{.Date}}</td>
+						<td><a href="../delfile.nutz?id=${obj.id}">下载</a></td>
+						<td><a href="../delfile.nutz?id=${obj.id}">删除</a></td>
+					</tr>
+                   {{end}} 
 				  </table>
 		</td>
         </tr>
@@ -114,6 +115,7 @@ function link(){
         <tr>
           <td height="33"><table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="right-font08">
               <tr>
+			<!--
                 <td width="50%">共 <span class="right-text09">${obj.pager.pageCount}</span> 页 | 第 <span class="right-text09">${obj.pager.pageNumber}</span> 页</td>
                 <td width="49%" align="right">[ <a href="../filelist.nutz?&pageNumber=1&pageSize=15" class="right-font08">首页</a> |
 					<span>
@@ -130,6 +132,7 @@ function link(){
 					</span>]</td>
                 <td width="1%"><table width="20" border="0" cellspacing="0" cellpadding="0">
                 </table></td>
+				-->
               </tr>
           </table></td>
         </tr>

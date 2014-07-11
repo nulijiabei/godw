@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 )
 
@@ -171,8 +172,66 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 
 }
 
+/*
+	TODO
+	这里偷个懒
+	应该将文件信息记录到数据库或者文件中
+	我这个每次都去扫描，浪费资源
+*/
+
+type I struct {
+	Name string
+	Size string
+	Date string
+}
+
+type D struct {
+	// 文件列表
+	Files []*I
+}
+
+// 构造
+func NewD() *D {
+	d := new(D)
+	d.Files = make([]*I, 0)
+	return d
+}
+
 // 文件列表
 func filelist(w http.ResponseWriter, r *http.Request) {
+
+	// 解析参数
+	r.ParseForm()
+
+	// 获取文件名称
+	fname := z.Trim(r.FormValue("f"))
+
+	// 创建返回对象
+	d := NewD()
+
+	// 遍历本地文件
+	filepath.Walk("files", func(ph string, f os.FileInfo, err error) error {
+		// 文件不存在
+		if f == nil {
+			return nil
+		}
+		// 跳过文件夹
+		if f.IsDir() {
+			return nil
+		}
+		// 判断文件是否存在
+		if z.IsBlank(fname) {
+			// 记录文件
+			d.Files = append(d.Files, &I{f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
+		} else {
+			if f.Name() == fname {
+				// 记录文件
+				d.Files = append(d.Files, &I{f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
+			}
+		}
+		// 返回
+		return nil
+	})
 
 	// 解析主页面
 	t, err := template.ParseFiles("template/files/filelist.html")
@@ -183,6 +242,6 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 执行
-	t.Execute(w, nil)
+	t.Execute(w, d)
 
 }
