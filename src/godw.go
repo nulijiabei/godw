@@ -203,6 +203,7 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 */
 
 type I struct {
+	Id   int
 	Name string
 	Size string
 	Date string
@@ -232,6 +233,9 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 	// 创建返回对象
 	d := NewD()
 
+	// ID
+	var id int
+
 	// 遍历本地文件
 	filepath.Walk("files", func(ph string, f os.FileInfo, err error) error {
 		// 文件不存在
@@ -244,13 +248,17 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 		}
 		// 判断文件是否存在
 		if z.IsBlank(fname) {
+			// 累加
+			id++
 			// 记录文件
-			d.Files = append(d.Files, &I{f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
+			d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
 		} else {
 			// 检查包含
 			if strings.Contains(strings.ToLower(f.Name()), strings.ToLower(fname)) {
+				// 累加
+				id++
 				// 记录文件
-				d.Files = append(d.Files, &I{f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
+				d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
 			}
 		}
 		// 返回
