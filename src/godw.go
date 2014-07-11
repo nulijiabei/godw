@@ -19,7 +19,7 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// 设置日志的结构
-	log.SetFlags(log.Lshortfile | log.Ltime | log.Lmicroseconds)
+	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime | log.Lmicroseconds)
 
 	// -------------------------------------------------------- //
 
@@ -36,6 +36,8 @@ func main() {
 	http.HandleFunc("/", index)
 
 	http.HandleFunc("/addfile.go", addfile)
+
+	http.HandleFunc("/rmfile.go", rmfile)
 
 	http.HandleFunc("/filelist.go", filelist)
 
@@ -94,15 +96,19 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 // 下载文件接口
 func download(w http.ResponseWriter, r *http.Request) {
+
 	// 解析参数
 	r.ParseForm()
+
 	// 获取文件名称
 	fname := z.Trim(r.FormValue("f"))
+
 	// 判断安装包是否存在
 	if !z.Exists(fmt.Sprintf("files/%s", fname)) {
 		http.Error(w, fmt.Sprintf("WARN: [%s] file not exists ...", fname), 500)
 		return
 	}
+
 	// 写入文件流
 	z.FileRF(fmt.Sprintf("files/%s", fname), func(f *os.File) {
 		_, err := io.Copy(w, bufio.NewReader(f))
@@ -111,10 +117,12 @@ func download(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	})
+
 }
 
 // 主页
 func index(w http.ResponseWriter, r *http.Request) {
+
 	// 解析主页面
 	t, err := template.ParseFiles("template/index.html")
 	if err != nil {
@@ -122,11 +130,15 @@ func index(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+
 	// 执行
 	t.Execute(w, nil)
+
 }
 
+// 添加文件
 func addfile(w http.ResponseWriter, r *http.Request) {
+
 	// 解析主页面
 	t, err := template.ParseFiles("template/files/addfile.html")
 	if err != nil {
@@ -134,15 +146,34 @@ func addfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+
 	// 执行
 	t.Execute(w, nil)
+
 }
 
+// 删除文件
 func rmfile(w http.ResponseWriter, r *http.Request) {
 
+	// 解析参数
+	r.ParseForm()
+
+	// 获取文件名称
+	fname := z.Trim(r.FormValue("f"))
+
+	// 判断安装包是否存在
+	if z.Exists(fmt.Sprintf("files/%s", fname)) {
+		// 删除
+		z.Fremove(fmt.Sprintf("files/%s", fname))
+	}
+
+	return
+
 }
 
+// 文件列表
 func filelist(w http.ResponseWriter, r *http.Request) {
+
 	// 解析主页面
 	t, err := template.ParseFiles("template/files/filelist.html")
 	if err != nil {
@@ -150,6 +181,8 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+
 	// 执行
 	t.Execute(w, nil)
+
 }
