@@ -102,13 +102,17 @@ func upload(w http.ResponseWriter, r *http.Request) {
 // 下载文件接口
 func download(w http.ResponseWriter, r *http.Request) {
 
-	w.Header().Set("Content-Type", "multipart/form-data")
-
 	// 解析参数
 	r.ParseForm()
 
 	// 获取文件名称
 	fname := z.Trim(r.FormValue("f"))
+
+	// 添加头信息
+	w.Header().Set("Content-Type", "multipart/form-data")
+
+	// 添加头信息
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fname))
 
 	// 判断安装包是否存在
 	if !z.Exists(fmt.Sprintf("files/%s", fname)) {
