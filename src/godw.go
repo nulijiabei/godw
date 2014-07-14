@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // 主
@@ -138,6 +139,27 @@ func download(w http.ResponseWriter, r *http.Request) {
 // 主页
 func index(w http.ResponseWriter, r *http.Request) {
 
+	// 解析参数
+	r.ParseForm()
+
+	// cookie
+	//if _, err := r.Cookie("username"); err != nil {
+	//
+	if _, ok := r.Form["admin"]; ok {
+		// cookie
+		cookie := http.Cookie{Name: "username", Value: "admin", Expires: time.Now().Add(24 * time.Hour)}
+		// cookie
+		http.SetCookie(w, &cookie)
+	}
+	//
+	if _, ok := r.Form["danoo"]; ok {
+		// cookie
+		cookie := http.Cookie{Name: "username", Value: "danoo", Expires: time.Now().Add(24 * time.Hour)}
+		// cookie
+		http.SetCookie(w, &cookie)
+	}
+	//}
+
 	// 解析主页面
 	t, err := template.ParseFiles("template/index.html")
 	if err != nil {
@@ -156,6 +178,14 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 // 添加文件
 func addfile(w http.ResponseWriter, r *http.Request) {
+
+	// cookie
+	if _, err := r.Cookie("username"); err != nil {
+		// 重定向
+		http.Redirect(w, r, "/filelist.go", http.StatusFound)
+		// 返回
+		return
+	}
 
 	// 解析主页面
 	t, err := template.ParseFiles("template/files/addfile.html")
@@ -176,17 +206,30 @@ func addfile(w http.ResponseWriter, r *http.Request) {
 // 删除文件
 func rmfile(w http.ResponseWriter, r *http.Request) {
 
+	// cookie
+	if cookie, err := r.Cookie("username"); err != nil {
+		// 重定向
+		http.Redirect(w, r, "/filelist.go", http.StatusFound)
+		// 返回
+		return
+	} else {
+		// cookie
+		if cookie.Value != "admin" {
+			// 重定向
+			http.Redirect(w, r, "/filelist.go", http.StatusFound)
+			// 返回
+			return
+		}
+	}
+
 	// 解析参数
 	r.ParseForm()
-
-	// 设置权限
-	_, ok := r.Form["admin"]
 
 	// 获取文件名称
 	fname := z.Trim(r.FormValue("f"))
 
 	// 判断安装包是否存在
-	if z.Exists(fmt.Sprintf("files/%s", fname)) && ok {
+	if z.Exists(fmt.Sprintf("files/%s", fname)) && !z.IsBlank(fname) {
 		// 删除
 		z.Fremove(fmt.Sprintf("files/%s", fname))
 	}
@@ -210,6 +253,7 @@ type I struct {
 	Name string
 	Size string
 	Date string
+	Stat string
 }
 
 type D struct {
@@ -226,6 +270,18 @@ func NewD() *D {
 
 // 文件列表
 func filelist(w http.ResponseWriter, r *http.Request) {
+
+	// 管理员
+	var admin string
+
+	// cookie
+	if cookie, err := r.Cookie("username"); err == nil {
+		// 权限
+		if cookie.Value == "admin" {
+			// 管理员
+			admin = "admin"
+		}
+	}
 
 	// 解析参数
 	r.ParseForm()
@@ -254,14 +310,14 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 			// 累加
 			id++
 			// 记录文件
-			d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
+			d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String(), admin})
 		} else {
 			// 检查包含
 			if strings.Contains(strings.ToLower(f.Name()), strings.ToLower(fname)) {
 				// 累加
 				id++
 				// 记录文件
-				d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String()})
+				d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String(), admin})
 			}
 		}
 		// 返回

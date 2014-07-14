@@ -103,7 +103,11 @@ html { overflow-x: auto; overflow-y: auto; border:0;}
 						<td>{{.Size}}</td>
 						<td>{{.Date}}</td>
 						<td><a href="../download.go?f={{.Name}}">下载</a></td>
+						{{if .Stat}}
 						<td><a href="../rmfile.go?f={{.Name}}">删除</a></td>
+						{{else}}
+						<td>删除</td>
+						{{end}}
 					</tr>
                    {{end}} 
 				  </table>
