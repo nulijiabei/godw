@@ -179,11 +179,14 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 	// 解析参数
 	r.ParseForm()
 
+	// 设置权限
+	_, ok := r.Form["admin"]
+
 	// 获取文件名称
 	fname := z.Trim(r.FormValue("f"))
 
 	// 判断安装包是否存在
-	if z.Exists(fmt.Sprintf("files/%s", fname)) {
+	if z.Exists(fmt.Sprintf("files/%s", fname)) && ok {
 		// 删除
 		z.Fremove(fmt.Sprintf("files/%s", fname))
 	}
