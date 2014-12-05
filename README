@@ -1,6 +1,8 @@
 Godw
 ========
 
+[![GoDoc](https://godoc.org/github.com/nulijiabei/godw?status.svg)](https://godoc.org/github.com/nulijiabei/godw)
+
 网络文件管理 ...
 
 通过一个简单的页面，来将重要的文件存储到云端 ...
