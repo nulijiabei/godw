@@ -1,0 +1,26 @@
+.panel {
+    margin-top: 60px;
+}
+.panel th {
+    text-align: center;
+}
+.panel td {
+    text-align: center;
+}
+
+#fsize {
+    text-align: left;
+}
+
+#fname {
+    text-align: left;
+}
+
+#ftime {
+	text-align: left;
+}
+
+#fscan {
+    font-size: small;
+}
+

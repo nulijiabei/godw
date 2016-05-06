@@ -1,9 +1,8 @@
-package godw
+package main
 
 import (
 	"bufio"
 	"fmt"
-	z "github.com/nutzam/zgo"
 	"html/template"
 	"io"
 	"log"
@@ -13,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	z "github.com/nutzam/zgo"
 )
 
 // 主
@@ -38,11 +39,7 @@ func main() {
 
 	http.HandleFunc("/", index)
 
-	http.HandleFunc("/addfile.go", addfile)
-
 	http.HandleFunc("/rmfile.go", rmfile)
-
-	http.HandleFunc("/filelist.go", filelist)
 
 	http.HandleFunc("/upload.go", upload)
 
@@ -94,7 +91,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 重定向
-	http.Redirect(w, r, "/filelist.go", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusFound)
 
 	// 返回
 	return
@@ -136,90 +133,15 @@ func download(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// 主页
-func index(w http.ResponseWriter, r *http.Request) {
-
-	// 解析参数
-	r.ParseForm()
-
-	// cookie
-	//if _, err := r.Cookie("username"); err != nil {
-	//
-	if _, ok := r.Form["admin"]; ok {
-		// cookie
-		cookie := http.Cookie{Name: "username", Value: "admin", Expires: time.Now().Add(24 * time.Hour)}
-		// cookie
-		http.SetCookie(w, &cookie)
-	}
-	//
-	if _, ok := r.Form["danoo"]; ok {
-		// cookie
-		cookie := http.Cookie{Name: "username", Value: "danoo", Expires: time.Now().Add(24 * time.Hour)}
-		// cookie
-		http.SetCookie(w, &cookie)
-	}
-	//}
-
-	// 解析主页面
-	t, err := template.ParseFiles("template/index.html")
-	if err != nil {
-		// 输出错误信息
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	// 执行
-	t.Execute(w, nil)
-
-	// 返回
-	return
-
-}
-
-// 添加文件
-func addfile(w http.ResponseWriter, r *http.Request) {
-
-	// cookie
-	if _, err := r.Cookie("username"); err != nil {
-		// 重定向
-		http.Redirect(w, r, "/filelist.go", http.StatusFound)
-		// 返回
-		return
-	}
-
-	// 解析主页面
-	t, err := template.ParseFiles("template/files/addfile.html")
-	if err != nil {
-		// 输出错误信息
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	// 执行
-	t.Execute(w, t)
-
-	// 返回
-	return
-
-}
-
 // 删除文件
 func rmfile(w http.ResponseWriter, r *http.Request) {
 
 	// cookie
-	if cookie, err := r.Cookie("username"); err != nil {
+	if _, err := r.Cookie("username"); err != nil {
 		// 重定向
-		http.Redirect(w, r, "/filelist.go", http.StatusFound)
+		http.Redirect(w, r, "/", http.StatusFound)
 		// 返回
 		return
-	} else {
-		// cookie
-		if cookie.Value != "admin" {
-			// 重定向
-			http.Redirect(w, r, "/filelist.go", http.StatusFound)
-			// 返回
-			return
-		}
 	}
 
 	// 解析参数
@@ -235,7 +157,7 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 重定向
-	http.Redirect(w, r, "/filelist.go", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusFound)
 
 	// 返回
 	return
@@ -268,8 +190,10 @@ func NewD() *D {
 	return d
 }
 
-// 文件列表
-func filelist(w http.ResponseWriter, r *http.Request) {
+func index(w http.ResponseWriter, r *http.Request) {
+
+	// 解析参数
+	r.ParseForm()
 
 	// 管理员
 	var admin string
@@ -281,10 +205,17 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 			// 管理员
 			admin = "admin"
 		}
+	} else {
+		// cookie
+		if _, ok := r.Form["admin"]; ok {
+			// cookie
+			cookie := http.Cookie{Name: "username", Value: "admin", Expires: time.Now().Add(24 * time.Hour)}
+			// cookie
+			http.SetCookie(w, &cookie)
+			// 管理员
+			admin = "admin"
+		}
 	}
-
-	// 解析参数
-	r.ParseForm()
 
 	// 获取文件名称
 	fname := z.Trim(r.FormValue("f"))
@@ -310,14 +241,14 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 			// 累加
 			id++
 			// 记录文件
-			d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String(), admin})
+			d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%.2fK(%dB)", float64(f.Size())/1024, f.Size()), f.ModTime().String(), admin})
 		} else {
 			// 检查包含
 			if strings.Contains(strings.ToLower(f.Name()), strings.ToLower(fname)) {
 				// 累加
 				id++
 				// 记录文件
-				d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%d", f.Size()), f.ModTime().String(), admin})
+				d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%.2fK(%dB)", float64(f.Size())/1024, f.Size()), f.ModTime().String(), admin})
 			}
 		}
 		// 返回
@@ -325,7 +256,7 @@ func filelist(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// 解析主页面
-	t, err := template.ParseFiles("template/files/filelist.html")
+	t, err := template.ParseFiles("template/default.html")
 	if err != nil {
 		// 输出错误信息
 		http.Error(w, err.Error(), 500)
