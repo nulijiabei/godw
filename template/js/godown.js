@@ -1,3 +1,5 @@
-$("#up").click(function(){
-    $("#fr").submit();
-});  
+$(document).ready(function () {
+    $("#ubtn").click(function () {
+        $("#uform").submit();
+    });
+});
