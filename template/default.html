@@ -68,46 +68,59 @@
         </div>
     </div>
 </nav>
-<!-- 面板表格 -->
-<div id="panel" class="container">
-    <div class="panel panel-default panel-primary">
-        <div class="panel-heading">
-            网络文件管理系统（德纳科技）
-        </div>
-        <!-- 盒子 -->
-        <div class="panel-body">
-            欢迎使用网络文件管理系统（德纳科技）<br>
-        </div>
-        <!-- 表格 -->
-        <table class="table table-striped">
-            <thead>
-            <tr class="active success">
-                <th>编号</th>
-                <th>文件名称</th>
-                <th>文件大小</th>
-                <th>创建日期</th>
-                <th>下载</th>
-                <th>操作</th>
-            </tr>
-            </thead>
-            <tbody>
-            {{range .Files}}
-            <tr>
-                <td>{{.Id}}</td>
-                <td id="fname">{{.Name}}</td>
-                <td id="fsize">{{.Size}}</td>
-                <td id="ftime">{{.Date}}</td>
-                <td><a href="../download.go?f={{.Name}}">下载</a></td>
-                {{if .Stat}}
-                <td><a href="../rmfile.go?f={{.Name}}">删除</a></td>
-                {{else}}
-                <td>删除</td>
-                {{end}}
-            </tr>
-            {{end}}
-            </tbody>
-        </table>
-    </div>
+<div class="container">
+	<!-- 面板表格 -->
+	<div id="panel" >
+	    <div class="panel panel-default panel-primary">
+	        <div class="panel-heading">
+	            网络文件管理系统
+	        </div>
+	        <!-- 盒子 -->
+	        <div class="panel-body">
+	            欢迎使用网络文件管理系统<br>
+	        </div>
+	        <!-- 表格 -->
+	        <table class="table table-striped">
+	            <thead>
+	            <tr class="active success">
+	                <th>编号</th>
+	                <th>文件名称</th>
+	                <th>文件大小</th>
+	                <th>创建日期</th>
+	                <th>下载</th>
+	                <th>操作</th>
+	            </tr>
+	            </thead>
+	            <tbody>
+	            {{range .Files}}
+	            <tr>
+	                <td>{{.Id}}</td>
+	                <td id="fname">{{.Name}}</td>
+	                <td id="fsize">{{.Size}}</td>
+	                <td id="ftime">{{.Date}}</td>
+	                <td><a href="../download.go?f={{.Name}}">下载</a></td>
+	                {{if .Stat}}
+	                <td><a href="../rmfile.go?f={{.Name}}">删除</a></td>
+	                {{else}}
+	                <td>删除</td>
+	                {{end}}
+	            </tr>
+	            {{end}}
+	            </tbody>
+	        </table>
+	    </div>
+	</div>
 </div>
+<!-- 分割线 -->
+<div id="divider" style="border-bottom: 1px solid #eee;"></div>
+<footer id="footer">
+   	<div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <a href="http://www.danoonetworks.com">@德纳科技 - 2016</a>
+            </div>
+        </div>
+    </div>
+</footer>
 </body>
 </html>

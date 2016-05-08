@@ -8,6 +8,11 @@
     text-align: center;
 }
 
+#footer {
+	padding: 30px;
+	text-align: center;
+}
+
 #fsize {
     text-align: left;
 }

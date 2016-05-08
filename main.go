@@ -171,11 +171,11 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 */
 
 type I struct {
-	Id   int
-	Name string
-	Size string
-	Date string
-	Stat string
+	Id   int    // ID
+	Name string // 文件名称
+	Size string // 文件大小
+	Date string // 上传日期
+	Stat string // 权限状态
 }
 
 type D struct {
@@ -241,14 +241,14 @@ func index(w http.ResponseWriter, r *http.Request) {
 			// 累加
 			id++
 			// 记录文件
-			d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%.2fK(%dB)", float64(f.Size())/1024, f.Size()), f.ModTime().String(), admin})
+			d.Files = append(d.Files, &I{id, f.Name(), unitCapacity(f.Size()), f.ModTime().String(), admin})
 		} else {
 			// 检查包含
 			if strings.Contains(strings.ToLower(f.Name()), strings.ToLower(fname)) {
 				// 累加
 				id++
 				// 记录文件
-				d.Files = append(d.Files, &I{id, f.Name(), fmt.Sprintf("%.2fK(%dB)", float64(f.Size())/1024, f.Size()), f.ModTime().String(), admin})
+				d.Files = append(d.Files, &I{id, f.Name(), unitCapacity(f.Size()), f.ModTime().String(), admin})
 			}
 		}
 		// 返回
@@ -269,4 +269,16 @@ func index(w http.ResponseWriter, r *http.Request) {
 	// 返回
 	return
 
+}
+
+func unitCapacity(size int64) string {
+	if g := float64(size) / (1024 * 1024 * 1024); int64(g) > 0 {
+		return fmt.Sprintf("%.2fG", g)
+	} else if m := float64(size) / (1024 * 1024); int64(m) > 0 {
+		return fmt.Sprintf("%.2fM", m)
+	} else if k := float64(size) / (1024); int64(k) > 0 {
+		return fmt.Sprintf("%.2fK", k)
+	} else {
+		return fmt.Sprintf("%dB", size)
+	}
 }
