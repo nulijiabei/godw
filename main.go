@@ -14,8 +14,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	z "github.com/nutzam/zgo"
 )
 
 var CONFIG *Config
@@ -77,7 +75,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 
 		// 判断文件是否存在
-		if z.Exists(fmt.Sprintf("files/%s", multi.Filename)) {
+		if Exists(fmt.Sprintf("files/%s", multi.Filename)) {
 			// 返回错误信息
 			http.Error(w, fmt.Sprintf("WARN: [%s] file exists ...", multi.Filename), 500)
 			return
@@ -113,7 +111,7 @@ func download(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	// 获取文件名称
-	fname := z.Trim(r.FormValue("f"))
+	fname := Trim(r.FormValue("f"))
 
 	// 添加头信息
 	w.Header().Set("Content-Type", "multipart/form-data")
@@ -122,13 +120,13 @@ func download(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fname))
 
 	// 判断安装包是否存在
-	if !z.Exists(fmt.Sprintf("files/%s", fname)) {
+	if !Exists(fmt.Sprintf("files/%s", fname)) {
 		http.Error(w, fmt.Sprintf("WARN: [%s] file not exists ...", fname), 500)
 		return
 	}
 
 	// 写入文件流
-	z.FileRF(fmt.Sprintf("files/%s", fname), func(f *os.File) {
+	FileRF(fmt.Sprintf("files/%s", fname), func(f *os.File) {
 		_, err := io.Copy(w, bufio.NewReader(f))
 		if err != nil {
 			http.Error(w, err.Error(), 500)
@@ -156,12 +154,12 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	// 获取文件名称
-	fname := z.Trim(r.FormValue("f"))
+	fname := Trim(r.FormValue("f"))
 
 	// 判断安装包是否存在
-	if z.Exists(fmt.Sprintf("files/%s", fname)) && !z.IsBlank(fname) {
+	if Exists(fmt.Sprintf("files/%s", fname)) && !IsBlank(fname) {
 		// 删除
-		z.Fremove(fmt.Sprintf("files/%s", fname))
+		Fremove(fmt.Sprintf("files/%s", fname))
 	}
 
 	// 重定向
@@ -228,7 +226,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取文件名称
-	fname := z.Trim(r.FormValue("f"))
+	fname := Trim(r.FormValue("f"))
 
 	// 创建返回对象
 	data := NewData()
@@ -248,7 +246,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 		// 判断文件是否存在
-		if z.IsBlank(fname) {
+		if IsBlank(fname) {
 			// 累加
 			id++
 			// 记录文件
@@ -304,7 +302,7 @@ func readConfig() *Config {
 	conf := new(Config)
 	conf.Size = 1073741824
 	conf.Admin = "admin"
-	if !z.Exists("godw.conf") {
+	if !Exists("godw.conf") {
 		log.Println("use default")
 		log.Println("not found godw.conf")
 		return conf
@@ -328,4 +326,86 @@ func readConfig() *Config {
 		return conf
 	}
 	return conf
+}
+
+// 判断一个路径是否存在
+func Exists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
+// 是不是空字符
+func IsSpace(c byte) bool {
+	if c >= 0x00 && c <= 0x20 {
+		return true
+	}
+	return false
+}
+
+// 判断一个字符串是不是空白串，即（0x00 - 0x20 之内的字符均为空白字符）
+func IsBlank(s string) bool {
+	for i := 0; i < len(s); i++ {
+		b := s[i]
+		if !IsSpace(b) {
+			return false
+		}
+	}
+	return true
+}
+
+// 去掉一个字符串左右的空白串，即（0x00 - 0x20 之内的字符均为空白字符）
+// 与strings.TrimSpace功能一致
+func Trim(s string) string {
+	size := len(s)
+	if size <= 0 {
+		return s
+	}
+	l := 0
+	for ; l < size; l++ {
+		b := s[l]
+		if !IsSpace(b) {
+			break
+		}
+	}
+	r := size - 1
+	for ; r >= l; r-- {
+		b := s[r]
+		if !IsSpace(b) {
+			break
+		}
+	}
+	return string(s[l : r+1])
+}
+
+// Remove 文件
+func Fremove(ph string) (err error) {
+	err = os.Remove(ph)
+	return err
+}
+
+/*
+将从自己磁盘目录，只读的方式打开一个文件。如果文件不存在，或者打开错误，则返回 nil。
+如果有错误，将打印 log
+
+调用者将负责关闭文件
+*/
+func FileR(ph string) *os.File {
+	f, err := os.Open(ph)
+	if nil != err {
+		return nil
+	}
+	return f
+}
+
+// 用回调的方式打文件以便读取内容，回调函数不需要关心文件关闭等问题
+func FileRF(ph string, callback func(*os.File)) {
+	f := FileR(ph)
+	if nil != f {
+		defer f.Close()
+		callback(f)
+	}
 }
