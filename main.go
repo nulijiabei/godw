@@ -61,6 +61,10 @@ func main() {
 
 }
 
+type Size interface {
+	Size() int64
+}
+
 // 上传文件接口
 func upload(w http.ResponseWriter, r *http.Request) {
 
@@ -73,6 +77,13 @@ func upload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
+
+		if sizeInterface, ok := file.(Size); ok {
+			if float64(sizeInterface.Size()) > CONFIG.Size {
+				http.Error(w, "超过文件大小限制", 500)
+				return
+			}
+		}
 
 		// 判断文件是否存在
 		if Exists(fmt.Sprintf("files/%s", multi.Filename)) {
