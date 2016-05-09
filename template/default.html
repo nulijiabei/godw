@@ -62,8 +62,10 @@
                 <button type="submit" class="btn btn-default">搜索</button>
             </form>
             <div class="nav navbar-btn navbar-right">
+			{{if .Stat}}
                 <button id="btn" type="button" class="btn btn-success" data-toggle="modal" data-target="#modal">上传文件
                 </button>
+			{{end}}
             </div>
         </div>
     </div>

@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +18,8 @@ import (
 	z "github.com/nutzam/zgo"
 )
 
+var CONFIG *Config
+
 // 主
 func main() {
 
@@ -24,6 +28,10 @@ func main() {
 
 	// 设置日志的结构
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime | log.Lmicroseconds)
+
+	// -------------------------------------------------------- //
+
+	CONFIG = readConfig()
 
 	// -------------------------------------------------------- //
 
@@ -170,7 +178,7 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 	我这个每次都去扫描，浪费资源
 */
 
-type I struct {
+type FileInfo struct {
 	Id   int    // ID
 	Name string // 文件名称
 	Size string // 文件大小
@@ -178,16 +186,18 @@ type I struct {
 	Stat string // 权限状态
 }
 
-type D struct {
+type Data struct {
+	// 权限状态
+	Stat string
 	// 文件列表
-	Files []*I
+	Files []*FileInfo
 }
 
 // 构造
-func NewD() *D {
-	d := new(D)
-	d.Files = make([]*I, 0)
-	return d
+func NewData() *Data {
+	data := new(Data)
+	data.Files = make([]*FileInfo, 0)
+	return data
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -198,22 +208,22 @@ func index(w http.ResponseWriter, r *http.Request) {
 	// 管理员
 	var admin string
 
+	// form
+	if _, ok := r.Form[CONFIG.Admin]; ok {
+		// cookie
+		cookie := http.Cookie{Name: "username", Value: CONFIG.Admin, Expires: time.Now().Add(24 * time.Hour)}
+		// cookie
+		http.SetCookie(w, &cookie)
+		// 管理员
+		admin = CONFIG.Admin
+	}
+
 	// cookie
 	if cookie, err := r.Cookie("username"); err == nil {
 		// 权限
-		if cookie.Value == "admin" {
+		if cookie.Value == CONFIG.Admin {
 			// 管理员
-			admin = "admin"
-		}
-	} else {
-		// cookie
-		if _, ok := r.Form["admin"]; ok {
-			// cookie
-			cookie := http.Cookie{Name: "username", Value: "admin", Expires: time.Now().Add(24 * time.Hour)}
-			// cookie
-			http.SetCookie(w, &cookie)
-			// 管理员
-			admin = "admin"
+			admin = cookie.Value
 		}
 	}
 
@@ -221,7 +231,8 @@ func index(w http.ResponseWriter, r *http.Request) {
 	fname := z.Trim(r.FormValue("f"))
 
 	// 创建返回对象
-	d := NewD()
+	data := NewData()
+	data.Stat = admin
 
 	// ID
 	var id int
@@ -241,14 +252,14 @@ func index(w http.ResponseWriter, r *http.Request) {
 			// 累加
 			id++
 			// 记录文件
-			d.Files = append(d.Files, &I{id, f.Name(), unitCapacity(f.Size()), f.ModTime().String(), admin})
+			data.Files = append(data.Files, &FileInfo{id, f.Name(), unitCapacity(f.Size()), f.ModTime().String(), admin})
 		} else {
 			// 检查包含
 			if strings.Contains(strings.ToLower(f.Name()), strings.ToLower(fname)) {
 				// 累加
 				id++
 				// 记录文件
-				d.Files = append(d.Files, &I{id, f.Name(), unitCapacity(f.Size()), f.ModTime().String(), admin})
+				data.Files = append(data.Files, &FileInfo{id, f.Name(), unitCapacity(f.Size()), f.ModTime().String(), admin})
 			}
 		}
 		// 返回
@@ -264,7 +275,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 执行
-	t.Execute(w, d)
+	t.Execute(w, data)
 
 	// 返回
 	return
@@ -281,4 +292,40 @@ func unitCapacity(size int64) string {
 	} else {
 		return fmt.Sprintf("%dB", size)
 	}
+}
+
+type Config struct {
+	Size  float64 `json:"size"`
+	Admin string  `json:"admin"`
+}
+
+func readConfig() *Config {
+	// New ServerConf
+	conf := new(Config)
+	conf.Size = 1073741824
+	conf.Admin = "admin"
+	if !z.Exists("godw.conf") {
+		log.Println("use default")
+		log.Println("not found godw.conf")
+		return conf
+	}
+	f, err := os.Open("godw.conf")
+	if err != nil {
+		log.Println("use default")
+		log.Println(err.Error())
+		return conf
+	}
+	bs, err := ioutil.ReadAll(bufio.NewReader(f))
+	if err != nil {
+		log.Println("use default")
+		log.Println(err.Error())
+		return conf
+	}
+	err = json.Unmarshal(bs, &conf)
+	if err != nil {
+		log.Println("use default")
+		log.Println(err.Error())
+		return conf
+	}
+	return conf
 }
