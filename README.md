@@ -31,6 +31,10 @@ Godw
 
 管理员，添加，查看，下载，删除，均可
 
+[ Linux Bash 上传 ]
+
+curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload.go
+
 ...
 
 ![image](https://raw.githubusercontent.com/nulijiabei/godw/master/screenshot.png)
