@@ -68,8 +68,13 @@ type Size interface {
 // 上传文件接口
 func upload(w http.ResponseWriter, r *http.Request) {
 
+	// 解析参数
+	r.ParseForm()
+
 	// 加锁,写入
 	if "POST" == r.Method {
+
+		v := r.FormValue("overlay")
 
 		file, multi, err := r.FormFile("file")
 		if err != nil {
@@ -87,8 +92,11 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 		// 判断文件是否存在
 		if Exists(fmt.Sprintf("files/%s", multi.Filename)) {
-			// 返回错误信息
-			http.Error(w, fmt.Sprintf("WARN: [%s] file exists ...", multi.Filename), 500)
+			if IsBlank(v) {
+				http.Error(w, fmt.Sprintf("WARN: [%s] file exists ...", multi.Filename), 500)
+			} else {
+				os.Remove(fmt.Sprintf("files/%s", multi.Filename))
+			}
 			return
 		}
 
@@ -349,25 +357,6 @@ func Exists(name string) bool {
 	return true
 }
 
-// 是不是空字符
-func IsSpace(c byte) bool {
-	if c >= 0x00 && c <= 0x20 {
-		return true
-	}
-	return false
-}
-
-// 判断一个字符串是不是空白串，即（0x00 - 0x20 之内的字符均为空白字符）
-func IsBlank(s string) bool {
-	for i := 0; i < len(s); i++ {
-		b := s[i]
-		if !IsSpace(b) {
-			return false
-		}
-	}
-	return true
-}
-
 // 去掉一个字符串左右的空白串，即（0x00 - 0x20 之内的字符均为空白字符）
 // 与strings.TrimSpace功能一致
 func Trim(s string) string {
@@ -419,4 +408,23 @@ func FileRF(ph string, callback func(*os.File)) {
 		defer f.Close()
 		callback(f)
 	}
+}
+
+// 是不是空字符
+func IsSpace(c byte) bool {
+	if c >= 0x00 && c <= 0x20 {
+		return true
+	}
+	return false
+}
+
+// 判断一个字符串是不是空白串，即（0x00 - 0x20 之内的字符均为空白字符）
+func IsBlank(s string) bool {
+	for i := 0; i < len(s); i++ {
+		b := s[i]
+		if !IsSpace(b) {
+			return false
+		}
+	}
+	return true
 }
