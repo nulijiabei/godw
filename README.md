@@ -34,8 +34,8 @@ Godw
 
 [ Linux Bash 上传 ]
 
-	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload.go
-	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload.go?overlay=true
+	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload
+	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload/f
 
 ----------------
 
