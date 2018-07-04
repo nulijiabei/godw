@@ -28,7 +28,7 @@
                     <h4 class="modal-title">上传文件</h4>
                 </div>
                 <div class="modal-body">
-                    <form id="uform" enctype="multipart/form-data" action="/upload.go" method="post">
+                    <form id="uform" enctype="multipart/form-data" action="/upload" method="post">
                         <div class="form-group">
                             <label for="fn"> </label>
                             <input class="form-control" type="file" size="50" name="file" id="fn">
@@ -100,9 +100,9 @@
 	                <td id="fname">{{.Name}}</td>
 	                <td id="fsize">{{.Size}}</td>
 	                <td id="ftime">{{.Date}}</td>
-	                <td><a href="../download.go?f={{.Name}}">下载</a></td>
+	                <td><a href="../download?f={{.Name}}">下载</a></td>
 	                {{if .Stat}}
-	                <td><a href="../rmfile.go?f={{.Name}}">删除</a></td>
+	                <td><a href="../rmfile?f={{.Name}}">删除</a></td>
 	                {{else}}
 	                <td>删除</td>
 	                {{end}}

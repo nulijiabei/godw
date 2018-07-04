@@ -18,7 +18,6 @@ import (
 
 var CONFIG *Config
 
-// 主
 func main() {
 
 	// 设置CPU核心数量
@@ -34,28 +33,22 @@ func main() {
 	// -------------------------------------------------------- //
 
 	http.Handle("/css/", http.FileServer(http.Dir("template")))
-
 	http.Handle("/js/", http.FileServer(http.Dir("template")))
-
 	http.Handle("/files/", http.FileServer(http.Dir("template")))
-
 	http.Handle("/images/", http.FileServer(http.Dir("template")))
 
 	// -------------------------------------------------------- //
 
 	http.HandleFunc("/", index)
-
-	http.HandleFunc("/rmfile.go", rmfile)
-
-	http.HandleFunc("/upload.go", upload)
-
-	http.HandleFunc("/download.go", download)
+	http.HandleFunc("/rmfile", rmfile)
+	http.HandleFunc("/upload", upload)
+	http.HandleFunc("/upload/f", upload)
+	http.HandleFunc("/download", download)
 
 	// -------------------------------------------------------- //
 
-	// 建立监听
+	// 监听
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		// 踢出错误
 		log.Panic(err)
 	}
 
@@ -67,83 +60,68 @@ type Size interface {
 
 // 上传文件接口
 func upload(w http.ResponseWriter, r *http.Request) {
-
+	log.Println(r.URL.String())
 	// 解析参数
 	r.ParseForm()
-
 	// 加锁,写入
 	if "POST" == r.Method {
-
-		v := r.FormValue("overlay")
-
 		file, multi, err := r.FormFile("file")
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
 		}
 		defer file.Close()
-
 		if sizeInterface, ok := file.(Size); ok {
 			if float64(sizeInterface.Size()) > CONFIG.Size {
 				http.Error(w, "超过文件大小限制", 500)
 				return
 			}
 		}
-
 		// 判断文件是否存在
 		if Exists(fmt.Sprintf("files/%s", multi.Filename)) {
-			if IsBlank(v) {
-				http.Error(w, fmt.Sprintf("WARN: [%s] file exists ...", multi.Filename), 500)
+			if r.URL != nil && strings.HasSuffix(r.URL.String(), "upload/f") {
+				if err := os.Remove(fmt.Sprintf("files/%s", multi.Filename)); err != nil {
+					http.Error(w, fmt.Sprintf("WARN: [%s] %s ...", multi.Filename, err.Error()), 500)
+					return
+				}
 			} else {
-				os.Remove(fmt.Sprintf("files/%s", multi.Filename))
+				http.Error(w, fmt.Sprintf("WARN: [%s] file exists ...", multi.Filename), 500)
+				return
 			}
-			return
 		}
-
 		f, err := os.Create(fmt.Sprintf("files/%s", multi.Filename))
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
 		}
 		defer f.Close()
-
 		_, err = io.Copy(f, file)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
 		}
-
 	}
-
 	// 重定向
 	http.Redirect(w, r, "/", http.StatusFound)
-
 	// 返回
 	return
-
 }
 
 // 下载文件接口
 func download(w http.ResponseWriter, r *http.Request) {
-
 	// 解析参数
 	r.ParseForm()
-
 	// 获取文件名称
 	fname := Trim(r.FormValue("f"))
-
 	// 添加头信息
 	w.Header().Set("Content-Type", "multipart/form-data")
-
 	// 添加头信息
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fname))
-
 	// 判断安装包是否存在
 	if !Exists(fmt.Sprintf("files/%s", fname)) {
 		http.Error(w, fmt.Sprintf("WARN: [%s] file not exists ...", fname), 500)
 		return
 	}
-
 	// 写入文件流
 	FileRF(fmt.Sprintf("files/%s", fname), func(f *os.File) {
 		_, err := io.Copy(w, bufio.NewReader(f))
@@ -155,12 +133,10 @@ func download(w http.ResponseWriter, r *http.Request) {
 
 	// 返回
 	return
-
 }
 
 // 删除文件
 func rmfile(w http.ResponseWriter, r *http.Request) {
-
 	// cookie
 	if _, err := r.Cookie("username"); err != nil {
 		// 重定向
@@ -168,22 +144,17 @@ func rmfile(w http.ResponseWriter, r *http.Request) {
 		// 返回
 		return
 	}
-
 	// 解析参数
 	r.ParseForm()
-
 	// 获取文件名称
 	fname := Trim(r.FormValue("f"))
-
 	// 判断安装包是否存在
 	if Exists(fmt.Sprintf("files/%s", fname)) && !IsBlank(fname) {
 		// 删除
 		Fremove(fmt.Sprintf("files/%s", fname))
 	}
-
 	// 重定向
 	http.Redirect(w, r, "/", http.StatusFound)
-
 	// 返回
 	return
 
@@ -218,13 +189,10 @@ func NewData() *Data {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-
 	// 解析参数
 	r.ParseForm()
-
 	// 管理员
 	var admin string
-
 	// form
 	if _, ok := r.Form[CONFIG.Admin]; ok {
 		// cookie
@@ -234,7 +202,6 @@ func index(w http.ResponseWriter, r *http.Request) {
 		// 管理员
 		admin = CONFIG.Admin
 	}
-
 	// cookie
 	if cookie, err := r.Cookie("username"); err == nil {
 		// 权限
@@ -243,17 +210,13 @@ func index(w http.ResponseWriter, r *http.Request) {
 			admin = cookie.Value
 		}
 	}
-
 	// 获取文件名称
 	fname := Trim(r.FormValue("f"))
-
 	// 创建返回对象
 	data := NewData()
 	data.Stat = admin
-
 	// ID
 	var id int
-
 	// 遍历本地文件
 	filepath.Walk("files", func(ph string, f os.FileInfo, err error) error {
 		// 文件不存在
@@ -282,7 +245,6 @@ func index(w http.ResponseWriter, r *http.Request) {
 		// 返回
 		return nil
 	})
-
 	// 解析主页面
 	t, err := template.ParseFiles("template/default.html")
 	if err != nil {
@@ -290,13 +252,10 @@ func index(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-
 	// 执行
 	t.Execute(w, data)
-
 	// 返回
 	return
-
 }
 
 func unitCapacity(size int64) string {
