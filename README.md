@@ -32,6 +32,11 @@ Godw
 	
 	管理员，添加，查看，下载，删除，均可
 
+[ 管理员 OR 普通用户 ]
+
+	http://127.0.0.1:8080
+	http://127.0.0.1:8080/?admin [这里的admin在godw.conf中设置]
+
 [ Linux Bash 上传 ]
 
 	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload
