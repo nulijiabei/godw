@@ -77,19 +77,25 @@ func upload(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		// 文件名
+		Filename := multi.Filename
 		// 判断文件是否存在
-		if Exists(fmt.Sprintf("files/%s", multi.Filename)) {
+		if Exists(fmt.Sprintf("files/%s", Filename)) {
 			if r.URL != nil && strings.HasSuffix(r.URL.String(), "upload/f") {
-				if err := os.Remove(fmt.Sprintf("files/%s", multi.Filename)); err != nil {
-					http.Error(w, fmt.Sprintf("WARN: [%s] %s ...", multi.Filename, err.Error()), 500)
+				if err := os.Remove(fmt.Sprintf("files/%s", Filename)); err != nil {
+					http.Error(w, fmt.Sprintf("WARN: [%s] %s ...", Filename, err.Error()), 500)
 					return
 				}
 			} else {
-				http.Error(w, fmt.Sprintf("WARN: [%s] file exists ...", multi.Filename), 500)
-				return
+				for i := 1; i < 100; i++ {
+					if !Exists(fmt.Sprintf("files/%s.%d", Filename, i)) {
+						Filename = fmt.Sprintf("%s.%d", Filename, i)
+						break
+					}
+				}
 			}
 		}
-		f, err := os.Create(fmt.Sprintf("files/%s", multi.Filename))
+		f, err := os.Create(fmt.Sprintf("files/%s", Filename))
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
@@ -99,6 +105,10 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
+		}
+		// add header rename ...
+		if Filename != multi.Filename {
+			w.Header().Set("rename", Filename)
 		}
 	}
 	// 重定向
@@ -115,9 +125,8 @@ func download(w http.ResponseWriter, r *http.Request) {
 	fname := Trim(r.FormValue("f"))
 	// 添加头信息
 	w.Header().Set("Content-Type", "multipart/form-data")
-	// 添加头信息
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fname))
-	// 判断安装包是否存在
+	// 判断文件是否存在
 	if !Exists(fmt.Sprintf("files/%s", fname)) {
 		http.Error(w, fmt.Sprintf("WARN: [%s] file not exists ...", fname), 500)
 		return
@@ -130,7 +139,6 @@ func download(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	})
-
 	// 返回
 	return
 }

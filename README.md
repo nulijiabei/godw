@@ -35,9 +35,8 @@ Godw
 
 [ Linux Bash 上传 ]
 
-	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload
-	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload/f
-
+	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload   [重名文件-Rename.1-N]
+	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload/f [重名文件-强制覆盖]
 ----------------
 
 ![image](https://raw.githubusercontent.com/nulijiabei/godw/master/screenshot.png)
