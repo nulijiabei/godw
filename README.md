@@ -39,6 +39,6 @@ Godw
 	curl -F "file=@a.jpg;filename=a.jpg"  http:/xxx.xxx.com:8080/upload/f [重名文件-强制覆盖]
 ----------------
 
-![image](https://raw.githubusercontent.com/nulijiabei/godw/master/screenshot.png)
+![image](screenshot.png)
 
 
